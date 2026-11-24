@@ -1,0 +1,30 @@
+# suricata.yaml 에 추가/수정할 설정 조각
+# 실제 파일: /etc/suricata/suricata.yaml
+
+# ── 1. 인터페이스 설정 ──────────────────────────────────────────
+# af-packet 섹션에서 내부망 인터페이스(ens33 등) 지정
+# Gateway의 내부망 NIC 이름은 'ip a' 로 확인 필요
+#
+# af-packet:
+#   - interface: ens33   ← 내부망 (192.168.100.x) NIC 이름으로 교체
+
+# ── 2. HOME_NET 설정 ───────────────────────────────────────────
+# vars:
+#   address-groups:
+#     HOME_NET: "[192.168.100.0/24,192.168.200.0/24]"
+#     EXTERNAL_NET: "!$HOME_NET"
+
+# ── 3. 규칙 파일 등록 ──────────────────────────────────────────
+# rule-files:
+#   - suricata.rules
+#   - dns-tunnel.rules    ← 이 줄 추가
+
+# ── 4. DNS 로깅 활성화 ─────────────────────────────────────────
+# outputs:
+#   - eve-log:
+#       enabled: yes
+#       filetype: regular
+#       filename: /var/log/suricata/eve.json
+#       types:
+#         - alert
+#         - dns          ← dns 이벤트도 기록

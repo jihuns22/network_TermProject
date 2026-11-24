@@ -1,0 +1,42 @@
+# DNS 터널링 탐지 규칙 — Gateway (192.168.100.53)
+# 적용 위치: /etc/suricata/rules/dns-tunnel.rules
+
+# Rule 1: DNS 레이블 50자 이상 (hex 데이터 청크 탐지)
+# seq(4) + data(50) = 54자짜리 서브도메인이 tunnel.lab.test 로 오면 트리거
+alert dns any any -> any any (
+    msg:"DNS TUNNEL - long subdomain label (>=50 chars)";
+    dns.query;
+    content:".tunnel.lab.test";
+    pcre:"/[0-9a-f]{50,}\./i";
+    threshold: type limit, track by_src, count 1, seconds 60;
+    sid:9001; rev:2;
+)
+
+# Rule 2: 세션 시작 패킷 탐지 (start{4x}{4x}.tunnel.lab.test)
+alert dns any any -> any any (
+    msg:"DNS TUNNEL - session START signal";
+    dns.query;
+    content:"start";
+    content:".tunnel.lab.test";
+    pcre:"/^start[0-9a-f]{8}\./i";
+    sid:9002; rev:1;
+)
+
+# Rule 3: 세션 종료 패킷 탐지 (end{4x}.tunnel.lab.test)
+alert dns any any -> any any (
+    msg:"DNS TUNNEL - session END signal";
+    dns.query;
+    content:"end";
+    content:".tunnel.lab.test";
+    pcre:"/^end[0-9a-f]{4}\./i";
+    sid:9003; rev:1;
+)
+
+# Rule 4: 짧은 시간 내 다량 DNS 쿼리 (10초에 15회 이상)
+alert dns any any -> any any (
+    msg:"DNS TUNNEL - high query rate (>=15/10sec)";
+    dns.query;
+    content:".tunnel.lab.test";
+    threshold: type threshold, track by_src, count 15, seconds 10;
+    sid:9004; rev:1;
+)
