@@ -1,9 +1,18 @@
-# CustomerDB — PostgreSQL Honeytoken
+# CustomerDB — PostgreSQL 허니토큰
 
-**실행 환경:** CustomerDB (192.168.100.30)
+**실행 환경:** CustomerDB (192.168.100.30)  
+**담당:** 팀원 (제작 중)
 
-## 계획 (추후 구현)
+## 설계 (2026-11-25 팀 결정)
 
-- PostgreSQL에 가짜 토큰 테이블 생성
-- SELECT 접근 시 trigger 발동 → 로그 기록
-- 로그 감시 스크립트 → iptables 자동 차단
+- 별도 가짜 DB가 아니라 **실사용 DB 레코드 사이에 허니토큰을 약 5%, 1% 비율로 섞음**
+- **어떤 기준으로 정렬해도 첫 번째에 오는 허니토큰**을 둬 조회 즉시 감지
+- 허니토큰이 조회되면 알림 발생 → `curl`로 Gateway(192.168.100.53:9999)에 **공격자 IP + 허니토큰 데이터** 전달
+- 탈취된 허니토큰(예: API 키)으로 공격자를 추적하는 부분은 발표 때 구두 설명
+
+## Gateway와 맞출 것
+
+알림 형식과 공유 키는 Gateway 쪽에서 제안한 안이 있고 아직 합의 전입니다.
+[`../gateway/block/README.md`](../gateway/block/README.md)의 "알림 형식" 참고.
+
+> 참고: PostgreSQL에는 SELECT 트리거가 없어서 예전 초안의 `AFTER SELECT` 트리거는 동작하지 않습니다.

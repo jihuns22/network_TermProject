@@ -1,0 +1,14 @@
+[Unit]
+Description=Honeytoken alert receiver + iptables auto block
+After=network.target
+
+[Service]
+Type=simple
+# 공유 키를 쓰려면 아래 값을 팀원 curl 과 같게 맞추세요 (비우면 검사 안 함)
+Environment=HT_SHARED_KEY=
+Environment=HT_ALLOWED_SENDERS=192.168.100.30,192.168.100.53,127.0.0.1
+ExecStart=/usr/bin/python3 /opt/honeytoken/block_server.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

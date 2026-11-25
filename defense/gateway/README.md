@@ -1,6 +1,17 @@
-# Gateway — Suricata IDS 설정
+# Gateway — 차단 서버 + Suricata IDS
 
 **실행 환경:** Gateway (192.168.100.53, Ubuntu 16.04, Suricata 3.0)
+
+## 허니토큰 알림 수신 + 자동 차단 (`block/`)
+
+CustomerDB에서 허니토큰 조회 알림(공격자 IP + 허니토큰 데이터)을 `curl`로 받아
+iptables 전용 체인 `HONEYTOKEN_BLOCK`(INPUT + FORWARD 연결)에 DROP 규칙을 넣습니다.
+설치·설계는 [block/README.md](block/README.md), 실험 절차는 [block/EXPERIMENT.md](block/EXPERIMENT.md).
+알림 형식과 공유 키는 제안안이며 팀원과 맞춰야 합니다.
+
+## Suricata IDS (`suricata/`, 유지 여부 미정)
+
+> 2026-11-25 탐지 방식이 허니토큰 알림으로 바뀌어, IDS를 보조로 남길지 뺄지는 팀원과 논의 중입니다.
 
 ## 파일
 
