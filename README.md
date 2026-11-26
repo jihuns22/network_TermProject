@@ -13,6 +13,72 @@ DB 속 허니토큰(미끼 고객)이 조회되는 순간 Gateway 가 공격자 
 | Kali | 192.168.200.10 | C2 수신 서버 | 53/udp |
 | CustomerDB | 192.168.100.30 | 고객 DB(PostgreSQL 9.5, 허니토큰 포함) — 팀원 담당 | 5433/tcp |
 
+## VM별 설치할 것
+
+실습망은 VMware 내부 네트워크라 인터넷이 안 됩니다. 설치할 때만 아래 "임시 인터넷 연결"로 잠깐 붙였다가 끊습니다.
+
+| VM | OS | 설치할 것 | 용도 |
+|---|---|---|---|
+| Win10 | Windows 10 | PostgreSQL Windows 설치 프로그램 중 **Command Line Tools**(`psql.exe`)만 | DB 조회(허니토큰 조회) |
+| | | (기본 내장) PowerShell 5, `Resolve-DnsName`, `nslookup`, `curl.exe` | DNS 터널링 유출, 테스트 |
+| Gateway | Ubuntu 16.04 | `git`, `curl`, `dnsmasq` | 레포 받기, 알림 테스트, DNS 포워딩 |
+| | | (기본 내장) `python3`(3.5), `iptables` | 차단 서버 `block_server.py`, 차단 |
+| | | (선택) `suricata` | IDS 보조 탐지 (유지 여부 미정) |
+| Kali | Kali Linux | (기본 내장) `python3`, `git` | C2 수신 서버 `kali_dns_server.py` |
+| CustomerDB | Ubuntu 16.04 | `postgresql-9.5`, `postgresql-client-9.5`, `python3.5`, `curl`, `git` | 허니토큰 DB, 알림 전송(팀원 DB) |
+
+우리 Python 코드(`block_server.py`, `kali_dns_server.py`)는 표준 라이브러리만 써서 `pip` 설치가 필요 없습니다.
+
+### Ubuntu 16.04 (Gateway, CustomerDB) 설치 순서
+
+처음 받은 VM 에는 `git`, `curl` 이 없었습니다.
+
+```bash
+# Gateway
+sudo apt-get update
+sudo apt-get install -y git curl dnsmasq
+sudo apt-get install -y suricata        # IDS 를 쓸 때만
+
+# CustomerDB
+sudo apt-get update
+sudo apt-get install -y git curl postgresql-9.5 postgresql-client-9.5 python3.5
+
+# 확인
+python3 --version          # 3.5.x
+git --version; curl --version | head -1
+```
+
+### 임시 인터넷 연결 (설치할 때만)
+
+1. VMware 에서 해당 VM 에 **네트워크 어댑터를 하나 추가하고 NAT 로 연결**합니다 (VM 설정 → Add → Network Adapter → NAT).
+2. 새 NIC 에서 주소를 받습니다.
+   ```bash
+   ip -4 addr                      # 새로 생긴 NIC 이름 확인 (예: ens38)
+   sudo dhclient ens38
+   ```
+3. DNS 를 8.8.8.8 로 바꿉니다. 내부망 DNS(Gateway)로는 외부 이름을 못 찾기 때문입니다.
+   ```bash
+   sudo cp /etc/resolv.conf /etc/resolv.conf.bak
+   echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf
+   ping -c 2 archive.ubuntu.com    # 응답 오면 연결 성공
+   ```
+4. 위 설치 명령을 실행합니다.
+5. 끝나면 원래대로 돌립니다. **NAT 어댑터를 빼지 않으면 실험 결과가 달라질 수 있습니다** (트래픽이 NAT 쪽으로 나갈 수 있음).
+   ```bash
+   sudo dhclient -r ens38
+   sudo cp /etc/resolv.conf.bak /etc/resolv.conf
+   ```
+   그다음 VMware 에서 NAT 어댑터를 제거(또는 연결 해제)합니다.
+
+> Gateway 는 dnsmasq 가 `/etc/resolv.conf` 를 상위 DNS 로 읽을 수 있으니, 되돌린 뒤 `sudo systemctl restart dnsmasq` 로 다시 띄우세요.
+
+### 레포 받기
+
+```bash
+git clone https://github.com/jihuns22/network_TermProject.git
+```
+Win10 은 git 이 없어도 됩니다. GitHub 에서 ZIP 으로 받거나 필요한 파일만 복사하세요.
+
 ## 지금까지 구현한 것
 
 | 구성 | 폴더 / 위치 | 상태 |
