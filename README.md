@@ -25,10 +25,9 @@ DB 속 허니토큰(미끼 고객)이 조회되는 순간 Gateway 가 공격자 
 | | | (기본 내장) `python3`(3.5), `iptables` | 차단 서버 `block_server.py`, 차단 |
 | | | (선택) `suricata` | IDS 보조 탐지 (유지 여부 미정) |
 | Kali | Kali Linux | (기본 내장) `python3`, `git` | C2 수신 서버 `kali_dns_server.py` |
-| CustomerDB | Ubuntu 16.04 | `postgresql-9.5`, `postgresql-client-9.5`, `python3.5`, `curl`, `git` | 허니토큰 DB, 알림 전송(팀원 DB) |
 
 우리 Python 코드(`block_server.py`, `kali_dns_server.py`)는 표준 라이브러리만 써서 `pip` 설치가 필요 없습니다.
-Ubuntu VM 은 처음 받았을 때 `git`, `curl` 이 없었습니다. 인터넷 연결은 아래 "임시 인터넷 연결" 을 먼저 하세요.
+Gateway(Ubuntu 16.04) 는 처음 받았을 때 `git`, `curl` 이 없었습니다. 인터넷 연결은 아래 "임시 인터넷 연결" 을 먼저 하세요.
 
 ### Win10 (192.168.100.20)
 
@@ -74,21 +73,6 @@ suricata -V                             # 설치한 경우만
 python3 --version
 git --version
 # 없으면: sudo apt-get update && sudo apt-get install -y python3 git
-```
-
-### CustomerDB (192.168.100.30, Ubuntu 16.04)
-
-```bash
-# 설치
-sudo apt-get update
-sudo apt-get install -y git curl postgresql-9.5 postgresql-client-9.5 python3.5
-
-# 확인
-git --version
-curl --version | head -1
-python3.5 --version
-dpkg-query -W postgresql-9.5 postgresql-client-9.5
-id postgres                             # postgres 계정이 생겼는지
 ```
 
 ### 임시 인터넷 연결 (설치할 때만)
