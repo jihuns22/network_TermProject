@@ -3,16 +3,26 @@
 """
 허니토큰 알림 수신 + 자동 차단 서버 (Gateway 192.168.100.53 용)
 
-CustomerDB 쪽 허니토큰 감지 코드가 curl 로 알림을 보내면
-  1) 보낸 쪽이 CustomerDB 인지, 공유 키가 맞는지 확인하고
-  2) 알림 안의 공격자 IP 를 검증한 뒤 (화이트리스트 제외)
+CustomerDB 쪽 허니토큰 감지 코드(팀원 customer-db-lab 의 forward.py)가 curl 로 알림을 보내면
+  1) 보낸 쪽이 CustomerDB 인지, (설정했다면) 공유 키가 맞는지 확인하고
+  2) 알림 안의 공격자 IP(client_ip)를 검증한 뒤 (화이트리스트 제외)
   3) iptables 전용 체인 HONEYTOKEN_BLOCK 에 DROP 규칙을 넣고
   4) 알림 내용(허니토큰 데이터 포함)을 JSON 로그로 남긴다.
 
 Gateway 가 Ubuntu 16.04 (Python 3.5) 이므로 f-string 등 3.6+ 문법은 쓰지 않았다.
 
+팀원 DB 가 보내는 알림 (허니토큰 행 1개당 1건, 공유 키 헤더 없음)
+  POST http://192.168.100.53:8080/alerts
+  {"event":"HONEYTOKEN_READ","event_id":"honeygen_5-3","time":"...","db":"honeygen_5",
+   "login":"business_reader","client_ip":"192.168.100.20","cno":"ASN-658"}
+
+팀원 forward.py 는 HTTP 2xx 를 받을 때까지 3초마다 같은 알림을 다시 보내고, 알림을 순서대로
+하나씩 처리한다. 그래서 출처·형식이 정상인 알림은 차단을 하지 않는 경우(화이트리스트, 이미 차단됨)에도
+200 으로 답해야 뒤 알림이 밀리지 않는다.
+
 엔드포인트
-  POST /alert            JSON 알림 (권장 형식, README 참고)
+  POST /alerts           팀원 DB 알림 (기본)
+  POST /alert            같은 처리 (예전 제안 형식 attacker_ip/honeytoken 도 받음)
   POST /block?ip=x.x.x.x  예전 초안 호환용 (IP 만 전달)
   GET  /blocked          현재 차단 목록
   POST /unblock?ip=...   차단 해제 (Gateway 자신에서만 허용, 시연 리셋용)
@@ -35,12 +45,14 @@ from urllib.parse import parse_qs, urlparse
 # 설정 (환경변수 또는 명령행 인자로 바꿀 수 있음)
 # ----------------------------------------------------------------------
 LISTEN_HOST = os.environ.get("HT_LISTEN_HOST", "0.0.0.0")
-LISTEN_PORT = int(os.environ.get("HT_LISTEN_PORT", "9999"))
+# 팀원 DB .env 의 기본값 GATEWAY_PORT=8080, ALERT_PATH=/alerts 에 맞춤
+LISTEN_PORT = int(os.environ.get("HT_LISTEN_PORT", "8080"))
 
 # 알림을 보낼 수 있는 출처 (CustomerDB). 쉼표로 여러 개 가능.
 ALLOWED_SENDERS = os.environ.get("HT_ALLOWED_SENDERS", "192.168.100.30,192.168.100.53,127.0.0.1")
 
-# 공유 키. 비워두면 검사하지 않음. 팀원 코드의 curl 에 같은 값을 넣어야 함.
+# 공유 키. 비워두면 검사하지 않음 (기본). 팀원 forward.py 는 키 헤더를 보내지 않으므로
+# 키를 쓰려면 팀원 curl 에 -H "X-Honeytoken-Key: <키>" 를 추가해야 함.
 SHARED_KEY = os.environ.get("HT_SHARED_KEY", "")
 
 # 절대 차단하면 안 되는 IP (Gateway 자신, DB, 루프백)
@@ -228,7 +240,7 @@ class Handler(BaseHTTPRequestHandler):
             log_event({"event": "unblocked", "ip": ip, "removed": removed})
             return self.reply(200, {"ok": True, "ip": ip, "removed": removed})
 
-        if u.path not in ("/alert", "/block"):
+        if u.path not in ("/alerts", "/alert", "/block"):
             return self.reply(404, {"ok": False, "error": "not found"})
 
         if not self.check_sender():
@@ -240,24 +252,34 @@ class Handler(BaseHTTPRequestHandler):
             log_event({"event": "rejected", "why": "JSON 파싱 실패: %s" % e, "sender": self.sender()})
             return self.reply(400, {"ok": False, "error": "bad json"})
 
-        # 예전 초안 호환: /block?ip=...  또는 JSON 의 attacker_ip
-        raw_ip = data.get("attacker_ip") or (qs.get("ip") or [""])[0]
+        # 공격자 IP: 팀원 형식 client_ip, 예전 제안 형식 attacker_ip, 초안 /block?ip=...
+        raw_ip = data.get("client_ip") or data.get("attacker_ip") or (qs.get("ip") or [""])[0]
         ip, err = validate_ip(raw_ip)
+
+        honeytoken = data.get("honeytoken")
+        if honeytoken is None and data.get("cno"):
+            # 팀원 형식: 조회된 미끼 고객번호(cno)와 DB 이름, 이벤트 번호
+            honeytoken = {"cno": data.get("cno"), "db": data.get("db"),
+                          "event_id": data.get("event_id")}
 
         alert = {
             "event": "alert",
             "sender": self.sender(),
+            "db_event": data.get("event"),            # HONEYTOKEN_READ
+            "event_id": data.get("event_id"),
             "attacker_ip": raw_ip,
-            "honeytoken": data.get("honeytoken"),
+            "honeytoken": honeytoken,
             "query": data.get("query"),
-            "db_user": data.get("db_user"),
-            "detected_at": data.get("detected_at"),
+            "db_user": data.get("login") or data.get("db_user"),
+            "detected_at": data.get("time") or data.get("detected_at"),
         }
         log_event(alert)
 
         if err:
-            log_event({"event": "not_blocked", "why": err})
-            return self.reply(400, {"ok": False, "error": err})
+            # 출처는 정상이므로 200 으로 답한다. 4xx 를 주면 팀원 forward.py 가 같은 알림을
+            # 무한 재시도하면서 뒤 알림 전체가 멈춘다.
+            log_event({"event": "not_blocked", "why": err, "event_id": data.get("event_id")})
+            return self.reply(200, {"ok": False, "blocked": False, "error": err})
 
         try:
             with _lock:
@@ -266,7 +288,7 @@ class Handler(BaseHTTPRequestHandler):
                     _blocked[ip] = {
                         "ip": ip,
                         "blocked_at": now_str(),
-                        "honeytoken": data.get("honeytoken"),
+                        "honeytoken": honeytoken,
                     }
         except RuntimeError as e:
             log_event({"event": "block_failed", "ip": ip, "why": str(e)})
@@ -274,7 +296,7 @@ class Handler(BaseHTTPRequestHandler):
 
         if newly:
             log_event({"event": "blocked", "ip": ip})
-            print("[BLOCKED] %s  (허니토큰: %s)" % (ip, json.dumps(data.get("honeytoken"), ensure_ascii=False)))
+            print("[BLOCKED] %s  (허니토큰: %s)" % (ip, json.dumps(honeytoken, ensure_ascii=False)))
         else:
             log_event({"event": "already_blocked", "ip": ip})
         self.reply(200, {"ok": True, "ip": ip, "blocked": True, "new": newly})

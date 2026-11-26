@@ -1,18 +1,17 @@
 #!/bin/bash
 # 차단 서버 동작 테스트. CustomerDB(192.168.100.30) 또는 Gateway 자신에서 실행.
-# 사용법: ./test_alert.sh [공격자IP] [게이트웨이주소]
+# 팀원 DB(customer-db-lab)의 forward.py 가 보내는 알림과 같은 형식으로 보낸다.
+# 사용법: ./test_alert.sh [공격자IP] [게이트웨이주소] [포트]
 ATTACKER=${1:-192.168.100.20}
 GW=${2:-192.168.100.53}
+PORT=${3:-8080}
 KEY=${HT_SHARED_KEY:-}
+N=${EVENT_NO:-$(date +%s)}
 
-curl -s -X POST "http://$GW:9999/alert" \
-  -H "Content-Type: application/json" \
-  -H "X-Honeytoken-Key: $KEY" \
-  -d "{
-    \"attacker_ip\": \"$ATTACKER\",
-    \"honeytoken\": {\"table\": \"customers\", \"id\": 1, \"name\": \"Kim Honey\", \"api_key\": \"sk_live_HONEY0001\"},
-    \"query\": \"SELECT * FROM customers ORDER BY id\",
-    \"db_user\": \"app\",
-    \"detected_at\": \"$(date '+%Y-%m-%d %H:%M:%S')\"
-  }"
-echo
+KEY_HEADER=()
+[ -n "$KEY" ] && KEY_HEADER=(-H "X-Honeytoken-Key: $KEY")
+
+curl -s --noproxy '*' -X POST "http://$GW:$PORT/alerts" \
+  -H "Content-Type: application/json" "${KEY_HEADER[@]}" \
+  --data-binary "{\"event\":\"HONEYTOKEN_READ\",\"event_id\":\"honeygen_5-$N\",\"time\":\"$(date '+%Y-%m-%d %H:%M:%S%z')\",\"db\":\"honeygen_5\",\"login\":\"business_reader\",\"client_ip\":\"$ATTACKER\",\"cno\":\"ASN-658\"}" \
+  -w '\nHTTP %{http_code}\n'

@@ -82,14 +82,14 @@ Win10 → DNS 쿼리(hex 인코딩) → Gateway(dnsmasq) → Kali(복원)
 
 **동작 확인 완료** — 4개 규칙 로드 성공, `fast.log` 탐지 로그 확인
 
-### 3. Gateway 차단 서버 (작성 완료, VM 미적용)
+### 3. Gateway 차단 서버 (작성 완료, 팀원 DB 알림 형식에 맞춤)
 
 파일: `defense/gateway/block/` — 자세한 내용은 [README](defense/gateway/block/README.md), 실험 절차는 [EXPERIMENT.md](defense/gateway/block/EXPERIMENT.md)
 
 ```
 CustomerDB (허니토큰 조회 감지)
-    ↓ curl POST http://192.168.100.53:9999/alert  {공격자 IP + 허니토큰 데이터}
-Gateway block_server.py (:9999)
+    ↓ curl POST http://192.168.100.53:8080/alerts  {client_ip, cno, db, login, time, event_id}
+Gateway block_server.py (:8080)
     ↓ 검증 → iptables 전용 체인 HONEYTOKEN_BLOCK 에 DROP 추가
 Win10 → Gateway:53 DNS 쿼리 차단 → 유출 중단
 ```
@@ -103,9 +103,10 @@ Win10 → Gateway:53 DNS 쿼리 차단 → 유출 중단
 - Ubuntu 16.04 기본 Python 3.5 호환, 외부 패키지 없음
 - 일반 Linux + 실제 iptables 에서 동작 확인. Gateway VM에서는 아직 실행 전
 
-> ⚠ **알림 형식(JSON 필드)과 공유 키(`X-Honeytoken-Key`)는 제안안이며 팀원과 아직 맞추지 않았음.**
-> 필수 필드는 `attacker_ip` 하나이고 나머지(`honeytoken`, `query`, `db_user`, `detected_at`)는 로그용.
-> 팀원 코드가 나오면 형식과 키 값을 맞춰야 함.
+> **알림 형식은 팀원 DB([customer-db-lab/ubuntu-db](https://github.com/quswodn1211/customer-db-lab/tree/main/ubuntu-db))의 `forward.py` 에 맞춤 (2026-11-26).**
+> 차단 IP 는 `client_ip`, 허니토큰은 `cno`. 팀원 forward.py 가 키 헤더를 안 보내므로 공유 키는 기본 끔(출처 IP 검사만).
+> forward.py 가 2xx 를 받을 때까지 재시도하므로 화이트리스트 등 차단 안 하는 경우도 200 으로 응답.
+> 예전 형식(`/alert` + `attacker_ip`, `/block?ip=`)도 계속 받음.
 
 ---
 
@@ -113,9 +114,9 @@ Win10 → Gateway:53 DNS 쿼리 차단 → 유출 중단
 
 | 항목 | 상태 | 비고 |
 |---|---|---|
-| 허니토큰 포함 DB + 조회 감지 + curl 알림 | 진행 중 (팀원) | 5%/1% 혼합, 항상 첫 행 허니토큰 |
-| 알림 형식·공유 키 합의 | 미완료 | Gateway 쪽 제안안 기준으로 팀원과 맞추기 |
-| Gateway에 차단 서버 설치·실험 | 미완료 | `EXPERIMENT.md` 순서대로 |
+| 허니토큰 포함 DB + 조회 감지 + curl 알림 | 완료 (팀원) | customer-db-lab/ubuntu-db |
+| 알림 형식 맞추기 | 완료 | Gateway 쪽을 팀원 형식(8080 /alerts, client_ip, cno)에 맞춤 |
+| Gateway에 차단 서버 설치·실험 | 미완료 | `EXPERIMENT.md` 순서대로 (8단계가 팀원 DB 실연동) |
 | IDS(Suricata) 유지 여부 결정 | 미정 | 팀원과 논의 중 |
 | 최종 통합 테스트 | 미완료 | 허니토큰 조회 → 알림 → 차단 → 유출 중단 |
 | 공격자 추적 설명 준비 | 미완료 | 발표 구두 설명 (API 키 감시) |

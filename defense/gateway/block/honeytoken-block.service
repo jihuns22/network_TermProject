@@ -4,7 +4,9 @@ After=network.target
 
 [Service]
 Type=simple
-# 공유 키를 쓰려면 아래 값을 팀원 curl 과 같게 맞추세요 (비우면 검사 안 함)
+# 팀원 DB 알림(8080 /alerts)을 받음. 팀원 forward.py 는 키 헤더를 안 보내므로 기본은 비워 둠.
+# 키를 쓰려면 팀원 curl 에도 X-Honeytoken-Key 헤더를 추가해야 함.
+Environment=HT_LISTEN_PORT=8080
 Environment=HT_SHARED_KEY=
 Environment=HT_ALLOWED_SENDERS=192.168.100.30,192.168.100.53,127.0.0.1
 ExecStart=/usr/bin/python3 /opt/honeytoken/block_server.py

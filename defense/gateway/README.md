@@ -4,10 +4,10 @@
 
 ## 허니토큰 알림 수신 + 자동 차단 (`block/`)
 
-CustomerDB에서 허니토큰 조회 알림(공격자 IP + 허니토큰 데이터)을 `curl`로 받아
-iptables 전용 체인 `HONEYTOKEN_BLOCK`(INPUT + FORWARD 연결)에 DROP 규칙을 넣습니다.
+CustomerDB(팀원 `forward.py`)가 보내는 허니토큰 조회 알림을 `POST :8080/alerts` 로 받아
+알림의 `client_ip` 를 iptables 전용 체인 `HONEYTOKEN_BLOCK`(INPUT + FORWARD 연결)에 DROP 으로 넣습니다.
+알림 형식은 팀원 DB 에 맞췄습니다(`client_ip`, `cno`, 키 헤더 없음). 팀원의 `gateway.py` 대신 이 서버를 띄웁니다.
 설치·설계는 [block/README.md](block/README.md), 실험 절차는 [block/EXPERIMENT.md](block/EXPERIMENT.md).
-알림 형식과 공유 키는 제안안이며 팀원과 맞춰야 합니다.
 
 ## Suricata IDS (`suricata/`, 유지 여부 미정)
 
