@@ -28,24 +28,67 @@ DB 속 허니토큰(미끼 고객)이 조회되는 순간 Gateway 가 공격자 
 | CustomerDB | Ubuntu 16.04 | `postgresql-9.5`, `postgresql-client-9.5`, `python3.5`, `curl`, `git` | 허니토큰 DB, 알림 전송(팀원 DB) |
 
 우리 Python 코드(`block_server.py`, `kali_dns_server.py`)는 표준 라이브러리만 써서 `pip` 설치가 필요 없습니다.
+Ubuntu VM 은 처음 받았을 때 `git`, `curl` 이 없었습니다. 인터넷 연결은 아래 "임시 인터넷 연결" 을 먼저 하세요.
 
-### Ubuntu 16.04 (Gateway, CustomerDB) 설치 순서
+### Win10 (192.168.100.20)
 
-처음 받은 VM 에는 `git`, `curl` 이 없었습니다.
+PostgreSQL 클라이언트는 [PostgreSQL Windows 다운로드](https://www.postgresql.org/download/windows/) 의 64비트 설치 프로그램에서
+구성 요소를 **Command Line Tools** 만 선택해 설치합니다 (서버는 필요 없음).
+
+```powershell
+# 설치 확인 (PowerShell). 버전 폴더(19)는 설치한 버전에 맞게 바꾸세요
+$psql = 'C:\Program Files\PostgreSQL\19\bin\psql.exe'
+& $psql --version
+
+# 기본 내장 도구 확인
+$PSVersionTable.PSVersion                  # 5.x
+Get-Command Resolve-DnsName, nslookup, curl.exe
+
+# 실습망 연결 확인
+Test-NetConnection 192.168.100.30 -Port 5433   # DB
+nslookup test.tunnel.lab.test 192.168.100.53   # Gateway DNS
+```
+
+### Gateway (192.168.100.53, Ubuntu 16.04)
 
 ```bash
-# Gateway
+# 설치
 sudo apt-get update
 sudo apt-get install -y git curl dnsmasq
-sudo apt-get install -y suricata        # IDS 를 쓸 때만
+sudo apt-get install -y suricata        # IDS 를 쓸 때만 (선택)
 
-# CustomerDB
+# 확인
+git --version
+curl --version | head -1
+dnsmasq --version | head -1
+python3 --version                       # 3.5.x (기본 내장)
+sudo iptables -L -n | head -3           # 기본 내장
+suricata -V                             # 설치한 경우만
+```
+
+### Kali (192.168.200.10)
+
+설치할 것은 없습니다. 기본 내장 도구만 확인합니다.
+
+```bash
+python3 --version
+git --version
+# 없으면: sudo apt-get update && sudo apt-get install -y python3 git
+```
+
+### CustomerDB (192.168.100.30, Ubuntu 16.04)
+
+```bash
+# 설치
 sudo apt-get update
 sudo apt-get install -y git curl postgresql-9.5 postgresql-client-9.5 python3.5
 
 # 확인
-python3 --version          # 3.5.x
-git --version; curl --version | head -1
+git --version
+curl --version | head -1
+python3.5 --version
+dpkg-query -W postgresql-9.5 postgresql-client-9.5
+id postgres                             # postgres 계정이 생겼는지
 ```
 
 ### 임시 인터넷 연결 (설치할 때만)
