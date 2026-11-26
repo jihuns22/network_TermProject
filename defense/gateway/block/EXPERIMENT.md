@@ -1,7 +1,7 @@
 # 허니토큰 차단 실험 절차
 
 먼저 **curl로 팀원 DB 알림을 흉내 내서**(1~7단계) 차단이 되는지 확인하고, 마지막 8단계에서 팀원 DB와 실제로 연동합니다.
-알림은 팀원 DB(`customer-db-lab/ubuntu-db/forward.py`)와 같은 형식(`POST :8080/alerts`, `client_ip`, `cno`)입니다.
+알림은 팀원 DB(`forward.py`)와 같은 형식(`POST :8080/alerts`, `client_ip`, `cno`)입니다.
 각 단계 앞의 `[VM]` 이 명령을 실행할 곳입니다.
 
 | VM | IP |
@@ -201,7 +201,7 @@ sudo iptables -X HONEYTOKEN_BLOCK
 
 ## 8단계. 팀원 DB와 실제 연동
 
-팀원 레포 [customer-db-lab/ubuntu-db](https://github.com/quswodn1211/customer-db-lab/tree/main/ubuntu-db) README 순서대로 DB 를 띄우되,
+팀원 DB README 순서대로 DB 를 띄우되,
 **팀원의 `gateway.py` 는 띄우지 않고** 우리 `block_server.py` 를 띄웁니다 (둘 다 8080).
 
 **[Gateway]** 7단계로 차단을 비운 뒤

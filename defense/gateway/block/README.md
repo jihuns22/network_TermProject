@@ -6,7 +6,7 @@
 Win10 공격자 (192.168.100.20)
    │  ① psql 로 SELECT * FROM read_customers(...)   (어떻게 정렬해도 첫 행이 허니토큰)
    ▼
-CustomerDB (192.168.100.30:5433)   ← 팀원 담당 (customer-db-lab/ubuntu-db)
+CustomerDB (192.168.100.30:5433)   ← 팀원 담당
    │  ② read_customers() 함수가 미끼 행을 낼 때 DB 로그(audit.csv)에 HNY01 기록
    │  ③ forward.py 가 curl POST http://192.168.100.53:8080/alerts  (client_ip + cno)
    ▼
@@ -40,7 +40,7 @@ Gateway의 dnsmasq(:53) 로 *직접* 들어오므로 `INPUT` 체인을 탑니다
 
 ## 3. 알림 형식 (팀원 DB에 맞춤)
 
-팀원 DB 레포 [quswodn1211/customer-db-lab](https://github.com/quswodn1211/customer-db-lab/tree/main/ubuntu-db) 의
+팀원 DB 의
 `forward.py` 가 보내는 형식을 그대로 받습니다. 팀원 쪽 코드나 `.env` 는 바꾸지 않아도 됩니다
 (`.env` 기본값 `GATEWAY_PORT=8080`, `ALERT_PATH=/alerts`).
 

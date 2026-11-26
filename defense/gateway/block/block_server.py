@@ -3,7 +3,7 @@
 """
 허니토큰 알림 수신 + 자동 차단 서버 (Gateway 192.168.100.53 용)
 
-CustomerDB 쪽 허니토큰 감지 코드(팀원 customer-db-lab 의 forward.py)가 curl 로 알림을 보내면
+CustomerDB 쪽 허니토큰 감지 코드(팀원 DB 의 forward.py)가 curl 로 알림을 보내면
   1) 보낸 쪽이 CustomerDB 인지, (설정했다면) 공유 키가 맞는지 확인하고
   2) 알림 안의 공격자 IP(client_ip)를 검증한 뒤 (화이트리스트 제외)
   3) iptables 전용 체인 HONEYTOKEN_BLOCK 에 DROP 규칙을 넣고

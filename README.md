@@ -19,7 +19,7 @@ DB 속 허니토큰(미끼 고객)이 조회되는 순간 Gateway 가 공격자 
 |---|---|---|
 | DNS 터널링 유출 (PowerShell, hex 인코딩) | [`attack/win10/`](attack/README.md) | 완료, 동작 확인 |
 | C2 수신·파일 복원 (Python) | [`attack/kali/`](attack/README.md) | 완료, 동작 확인 |
-| 허니토큰 고객 DB + 조회 알림 | 팀원 레포 [customer-db-lab/ubuntu-db](https://github.com/quswodn1211/customer-db-lab/tree/main/ubuntu-db) · 요약 [`defense/customerdb/`](defense/customerdb/README.md) | 완료 (팀원) |
+| 허니토큰 고객 DB + 조회 알림 | 팀원 담당 · 요약 [`defense/customerdb/`](defense/customerdb/README.md) | 완료 (팀원) |
 | 허니토큰 알림 수신 + iptables 자동 차단 | [`defense/gateway/block/`](defense/gateway/block/README.md) | 완료, 팀원 알림 형식에 맞춤. Gateway VM 실연동은 [EXPERIMENT.md](defense/gateway/block/EXPERIMENT.md) 8단계 |
 | Suricata IDS 규칙 (SID 9001~9004) | [`defense/gateway/suricata/`](defense/gateway/README.md) | 동작 확인, 유지 여부 미정 |
 

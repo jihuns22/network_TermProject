@@ -6,7 +6,7 @@
 |---|---|---|---|
 | gateway/block/ | Gateway (192.168.100.53) | Python 차단 서버 + iptables | 우리 |
 | gateway/suricata/ | Gateway (192.168.100.53) | Suricata IDS (유지 여부 미정) | 우리 |
-| customerdb/ | CustomerDB (192.168.100.30) | PostgreSQL 허니토큰 (코드는 팀원 레포 [customer-db-lab](https://github.com/quswodn1211/customer-db-lab/tree/main/ubuntu-db)) | 팀원 |
+| customerdb/ | CustomerDB (192.168.100.30) | PostgreSQL 허니토큰 | 팀원 |
 
 ## 탐지·차단 방식 (2026-11-25 변경)
 

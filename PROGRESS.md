@@ -103,7 +103,7 @@ Win10 → Gateway:53 DNS 쿼리 차단 → 유출 중단
 - Ubuntu 16.04 기본 Python 3.5 호환, 외부 패키지 없음
 - 일반 Linux + 실제 iptables 에서 동작 확인. Gateway VM에서는 아직 실행 전
 
-> **알림 형식은 팀원 DB([customer-db-lab/ubuntu-db](https://github.com/quswodn1211/customer-db-lab/tree/main/ubuntu-db))의 `forward.py` 에 맞춤 (2026-11-26).**
+> **알림 형식은 팀원 DB 의 `forward.py` 에 맞춤 (2026-11-26).**
 > 차단 IP 는 `client_ip`, 허니토큰은 `cno`. 팀원 forward.py 가 키 헤더를 안 보내므로 공유 키는 기본 끔(출처 IP 검사만).
 > forward.py 가 2xx 를 받을 때까지 재시도하므로 화이트리스트 등 차단 안 하는 경우도 200 으로 응답.
 > 예전 형식(`/alert` + `attacker_ip`, `/block?ip=`)도 계속 받음.
@@ -114,7 +114,7 @@ Win10 → Gateway:53 DNS 쿼리 차단 → 유출 중단
 
 | 항목 | 상태 | 비고 |
 |---|---|---|
-| 허니토큰 포함 DB + 조회 감지 + curl 알림 | 완료 (팀원) | customer-db-lab/ubuntu-db |
+| 허니토큰 포함 DB + 조회 감지 + curl 알림 | 완료 (팀원) | 팀원 DB 코드 |
 | 알림 형식 맞추기 | 완료 | Gateway 쪽을 팀원 형식(8080 /alerts, client_ip, cno)에 맞춤 |
 | Gateway에 차단 서버 설치·실험 | 미완료 | `EXPERIMENT.md` 순서대로 (8단계가 팀원 DB 실연동) |
 | IDS(Suricata) 유지 여부 결정 | 미정 | 팀원과 논의 중 |

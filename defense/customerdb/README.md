@@ -1,7 +1,7 @@
 # CustomerDB — PostgreSQL 허니토큰
 
 **실행 환경:** CustomerDB (192.168.100.30)  
-**담당:** 팀원 — 코드: [quswodn1211/customer-db-lab/ubuntu-db](https://github.com/quswodn1211/customer-db-lab/tree/main/ubuntu-db)
+**담당:** 팀원
 
 ## 설계 (2026-11-25 팀 결정)
 
